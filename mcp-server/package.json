@@ -1,0 +1,16 @@
+{
+  "name": "viz-report-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "mcp-viz-server.js",
+  "scripts": {
+    "start": "node mcp-viz-server.js",
+    "dev": "node --watch mcp-viz-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest"
+  },
+  "bin": {
+    "viz-report-server": "./mcp-viz-server.js"
+  }
+}

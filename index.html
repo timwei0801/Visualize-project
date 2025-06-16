@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能視覺化推薦系統 v2.0 - 商業智慧版</title>
+    
+    <!-- 外部庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.24.1/plotly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- 樣式文件 -->
+    <!-- GridStack CSS for draggable/resizable grid -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@7.2.2/dist/gridstack.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="background-decoration"></div>
+    
+    <div class="container">
+        <!-- 標題區域 -->
+        <div class="header">
+            <h1 class="main-title">🎯 智能視覺化推薦系統 v2.0</h1>
+            <p class="subtitle">商業智慧版 - 讓數據說話，讓洞察閃光 ✨</p>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="errorAlert" class="alert" style="display: none;">
+            <button class="alert-close" onclick="hideError()">×</button>
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- 主要布局 -->
+        <div class="main-layout">
+            <!-- 頂部控制面板 - 橫向布局 -->
+            <div class="glass-card top-panel">
+                <div class="top-content">
+                    <!-- 檔案上傳區域 -->
+                    <div class="upload-section">
+                        <h2 class="section-title">📁 數據上傳</h2>
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon" id="uploadIcon">📁</div>
+                            <div class="upload-text" id="uploadText">拖放檔案或點擊上傳</div>
+                            <div class="upload-subtext">支援 CSV、Excel、JSON 格式</div>
+                            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.json" style="display: none;">
+                        </div>
+                        <div id="fileInfo" class="file-info" style="display: none;">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI 助手區域 -->
+                    <div class="ai-section">
+                        <h3 class="section-title">🤖 AI 智能助手</h3>
+                        <textarea 
+                            class="ai-input" 
+                            id="userInput" 
+                            placeholder="描述您的視覺化需求，例如：我想看銷售趨勢，比較不同產品的表現..."
+                        ></textarea>
+                        <div class="ai-buttons">
+                            <button class="btn btn-primary" id="claudeBtn">🧠 Claude 語義分析</button>
+                            <button class="btn btn-secondary" id="vizmlBtn">🔬 VizML 統計分析</button>
+                            <button class="btn btn-purple" id="hybridBtn">✨ 混合智能推薦</button>
+                        </div>
+                    </div>
+
+                    <!-- 圖表選擇器 -->
+                    <div class="chart-section">
+                        <h3 class="section-title">📊 圖表庫</h3>
+                        <div class="chart-tabs">
+                            <div class="chart-tab active" data-tab="basic">基礎</div>
+                            <div class="chart-tab" data-tab="advanced">進階</div>
+                            <div class="chart-tab" data-tab="business">商業</div>
+                        </div>
+                        <div class="chart-grid" id="chartGrid"></div>
+                    </div>
+
+                    <!-- 數據概覽 -->
+                    <div class="data-overview-section">
+                        <div id="dataOverview" style="display: none;">
+                            <h3 class="section-title">📊 數據概覽</h3>
+                            <div class="data-overview-content">
+                                <div class="data-stats">
+                                    <div class="data-item"><strong>總行數：</strong><span id="totalRows">0</span></div>
+                                    <div class="data-item"><strong>欄位數：</strong><span id="totalColumns">0</span></div>
+                                    <div class="data-item"><strong>數值欄位：</strong><span id="numericColumns">無</span></div>
+                                    <div class="data-item"><strong>類別欄位：</strong><span id="categoricalColumns">無</span></div>
+                                    <div class="data-item"><strong>時間欄位：</strong><span id="timeColumns">無</span></div>
+                                </div>
+                                <div class="data-preview">
+                                    <h4>數據預覽 (前5行)</h4>
+                                    <div class="data-table-container">
+                                        <table id="dataPreviewTable" class="data-table"></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下方主內容區 - 智能儀表板橫向佔滿 -->
+            <div class="main-content">
+                <!-- 智能儀表板區域 -->
+                <div class="glass-card dashboard-area">
+                    <div class="dashboard-header">
+                        <h2 class="section-title">
+                            📈 智能儀表板
+                            <span class="chart-count" id="chartCount">0</span>
+                        </h2>
+                        <div class="dashboard-controls">
+                            <button class="icon-btn" id="layoutBtn" title="自動排列">🔄</button>
+                            <button class="icon-btn" id="clearAllBtn" title="清除所有圖表">🗑️</button>
+                            <button class="icon-btn" id="gridToggleBtn" title="顯示/隱藏網格線">⚏</button>
+                            <button class="icon-btn" id="compactBtn" title="緊湊排列">🧩</button>
+                            <button class="icon-btn" id="exportBtn" title="匯出報告">💾</button>
+                        </div>
+                    </div>
+                    <div class="dashboard-content">
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon">📊</div>
+                            <div class="empty-title">歡迎使用智能儀表板</div>
+                            <div class="empty-text">
+                                上傳數據並選擇圖表類型開始分析<br>
+                                支援可調整大小的互動式圖表<br>
+                                <small>支援各種格式的數據檔案</small>
+                            </div>
+                        </div>
+                        <div class="grid-stack" id="chartsGrid" style="display: none;"></div>
+                    </div>
+
+                <!-- 右側推薦結果 -->
+                <div class="glass-card right-panel">
+                    <h2 class="section-title">🎯 AI 洞察</h2>
+                    <div id="loadingSection" style="display: none;">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div>分析中...</div>
+                        </div>
+                        <div class="shimmer-line"></div>
+                        <div class="shimmer-line"></div>
+                        <div class="shimmer-line"></div>
+                        <div class="shimmer-line"></div>
+                        <div class="shimmer-line"></div>
+                    </div>
+                    <div id="recommendationSection" style="display: none;">
+                        <div class="recommendation-card">
+                            <h3 style="margin-bottom: 15px;">
+                                🎯 推薦結果
+                                <span class="confidence-badge" id="confidenceLevel">85%</span>
+                            </h3>
+                            <p id="recommendationReason" style="margin-bottom: 15px; color: #666; line-height: 1.6;">
+                                根據您的數據特徵和需求描述，推薦使用以下圖表類型...
+                            </p>
+                            <div style="font-weight: 600; margin-bottom: 10px;">推薦圖表類型：</div>
+                            <div class="chart-chips" id="recommendedCharts"></div>
+                        </div>
+                    </div>
+                    <div id="insightsSection" style="display: none;">
+                        <h3 class="section-title">💡 數據洞察</h3>
+                        <div class="insights-card">
+                            <div id="dataInsights"></div>
+                        </div>
+                    </div>
+                    <h3 class="section-title">⚡ 快速操作</h3>
+                    <button class="btn btn-secondary" onclick="resetRecommendation()">🔄 重新分析</button>
+                    <button class="btn btn-secondary" id="exportReportBtn">📊 匯出報告</button>
+                    <button class="btn btn-secondary" id="filterDataBtn">🔍 數據篩選</button>
+                    <button class="btn btn-secondary" id="viewDataBtn">📋 查看數據</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮動添加按鈕 -->
+    <button class="floating-btn" id="floatingAddBtn" style="display: none;" title="添加圖表">
+        ➕
+    </button>
+
+    <!-- 圖表自定義模態框 -->
+    <div class="modal" id="customizationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ 圖表自定義設定</h3>
+                <button class="close-btn" onclick="closeCustomizationModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="customization-tabs">
+                    <div class="custom-tab active" data-tab="visual">🎨 視覺設定</div>
+                    <div class="custom-tab" data-tab="data">📊 數據設定</div>
+                </div>
+                
+                <div class="custom-content" id="visualSettings">
+                    <div class="form-group">
+                        <label>圖表標題：</label>
+                        <input type="text" id="chartTitleInput" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>顏色主題：</label>
+                        <select id="colorThemeSelect" class="form-select">
+                            <option value="default">預設</option>
+                            <option value="blue">藍色系</option>
+                            <option value="green">綠色系</option>
+                            <option value="red">紅色系</option>
+                            <option value="purple">紫色系</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>圖表透明度：</label>
+                        <input type="range" id="opacitySlider" min="0.3" max="1" step="0.1" value="0.8" class="form-range">
+                        <span id="opacityValue">80%</span>
+                    </div>
+                </div>
+                
+                <div class="custom-content" id="dataSettings" style="display: none;">
+                    <div class="form-group">
+                        <label>X軸欄位：</label>
+                        <select id="xAxisSelect" class="form-select">
+                            <!-- 動態生成選項 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Y軸欄位：</label>
+                        <select id="yAxisSelect" class="form-select">
+                            <!-- 動態生成選項 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="showLabels" checked> 顯示數據標籤</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="showLegend" checked> 顯示圖例</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="enableAnimation" checked> 動畫效果</label>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeCustomizationModal()">取消</button>
+                    <button class="btn btn-primary" onclick="applyCustomization()">套用設定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 數據查看模態框 -->
+    <div class="modal" id="dataViewModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 完整數據查看</h3>
+                <button class="close-btn" onclick="closeDataViewModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="data-view-controls">
+                    <input type="text" id="searchInput" placeholder="搜尋數據..." class="form-input">
+                    <select id="columnFilter" class="form-select">
+                        <option value="">所有欄位</option>
+                    </select>
+                </div>
+                <div class="data-table-full-container">
+                    <table id="fullDataTable" class="data-table full">
+                        <!-- 完整數據表格 -->
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JavaScript 文件 -->
+    <script src="js/dataAnalyzer.js"></script>
+    <script src="js/PlotlyChartGenerator.js"></script>
+    <script src="js/chartGenerator.js"></script>
+    <!-- GridStack UMD bundle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/7.2.2/gridstack-all.min.js"></script>
+    <script src="js/reportGenerator.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- 圖片轉換庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="js/enhancedReportGenerator.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
